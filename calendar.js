@@ -2,7 +2,7 @@
 
 // Configuration
 const CONFIG = {
-    calendarId: 'be5a630aebb1f10d8e8bee8149448cda4b822751739--snip--',
+    calendarId: 'be5a630aebb1f10d8e8bee8144948cda4b8227517394f8ff109a17c9424b6e57@group.calendar.google.com',
     apiKey: 'YOUR_GOOGLE_API_KEY', // Optional if calendar is public
     minNights: 3,
     maxGuests: 4,
