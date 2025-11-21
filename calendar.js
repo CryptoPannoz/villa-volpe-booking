@@ -242,19 +242,35 @@ async function loadBlockedDates() {
             console.log(`Found ${data.items.length} events in Google Calendar`);
             
             data.items.forEach(event => {
-                // Process all-day events (these are bookings)
+                let startDate, endDate;
+                
+                // Handle all-day events (event.start.date)
                 if (event.start.date) {
-                    const startDate = new Date(event.start.date);
-                    const endDate = new Date(event.end.date);
-                    
-                    console.log(`Blocking dates from ${event.start.date} to ${event.end.date}`);
+                    startDate = new Date(event.start.date);
+                    endDate = new Date(event.end.date);
+                    console.log(`[ALL-DAY] Event: ${event.summary || 'Booking'}`);
+                    console.log(`  From: ${event.start.date} To: ${event.end.date}`);
+                }
+                // Handle timed events (event.start.dateTime)
+                else if (event.start.dateTime) {
+                    startDate = new Date(event.start.dateTime);
+                    endDate = new Date(event.end.dateTime);
+                    console.log(`[TIMED] Event: ${event.summary || 'Booking'}`);
+                    console.log(`  From: ${event.start.dateTime} To: ${event.end.dateTime}`);
+                }
+                
+                if (startDate && endDate) {
+                    // Reset time to midnight for date comparison
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate.setHours(0, 0, 0, 0);
                     
                     // Add all dates in the event range
                     let currentDate = new Date(startDate);
-                    while (currentDate < endDate) {
+                    while (currentDate <= endDate) {
                         const dateStr = currentDate.toISOString().split('T')[0];
                         if (!state.blockedDates.includes(dateStr)) {
                             state.blockedDates.push(dateStr);
+                            console.log(`  Blocked: ${dateStr}`);
                         }
                         currentDate.setDate(currentDate.getDate() + 1);
                     }
@@ -262,7 +278,7 @@ async function loadBlockedDates() {
             });
             
             console.log(`Total blocked dates: ${state.blockedDates.length}`);
-            console.log('Blocked dates:', state.blockedDates);
+            console.log('All blocked dates:', state.blockedDates.sort());
         }
         
         renderCalendar();
