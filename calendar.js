@@ -3,7 +3,7 @@
 // Configuration
 const CONFIG = {
     calendarId: 'be5a630aebb1f10d8e8bee8144948cda4b8227517394f8ff109a17c9424b6e57@group.calendar.google.com',
-    apiKey: 'AIzaSyDkmWoTVEgonSPPTYrKIY9SuoodIVO4lpQ', // Optional if calendar is public
+    apiKey: 'AIzaSyDkmWoTVEgonSPPTYrKIY9SuoodIVO4lpQ',
     minNights: 3,
     maxGuests: 4,
     email: 'villavolpeorta@gmail.com'
@@ -219,15 +219,6 @@ function hasBlockedDatesInRange(startDate, endDate) {
 
 // Load Blocked Dates from Google Calendar
 async function loadBlockedDates() {
-    // For now, use mock data. In production, fetch from Google Calendar API
-    // Example blocked dates (you can replace this with actual API call)
-    state.blockedDates = [
-        // Format: 'YYYY-MM-DD'
-        // Add your blocked dates here
-    ];
-    
-    // Uncomment below to fetch from Google Calendar API
-    /*
     try {
         const timeMin = new Date().toISOString();
         const timeMax = new Date();
@@ -235,30 +226,50 @@ async function loadBlockedDates() {
         
         const url = `https://www.googleapis.com/calendar/v3/calendars/${CONFIG.calendarId}/events?key=${CONFIG.apiKey}&timeMin=${timeMin}&timeMax=${timeMax.toISOString()}&singleEvents=true`;
         
+        console.log('Loading blocked dates from Google Calendar...');
+        console.log('Calendar ID:', CONFIG.calendarId);
+        
         const response = await fetch(url);
         const data = await response.json();
         
+        if (data.error) {
+            console.error('Google Calendar API Error:', data.error);
+            alert('Error loading calendar availability. Please contact us directly at ' + CONFIG.email);
+            return;
+        }
+        
         if (data.items) {
+            console.log(`Found ${data.items.length} events in Google Calendar`);
+            
             data.items.forEach(event => {
+                // Process all-day events (these are bookings)
                 if (event.start.date) {
                     const startDate = new Date(event.start.date);
                     const endDate = new Date(event.end.date);
                     
+                    console.log(`Blocking dates from ${event.start.date} to ${event.end.date}`);
+                    
                     // Add all dates in the event range
                     let currentDate = new Date(startDate);
                     while (currentDate < endDate) {
-                        state.blockedDates.push(currentDate.toISOString().split('T')[0]);
+                        const dateStr = currentDate.toISOString().split('T')[0];
+                        if (!state.blockedDates.includes(dateStr)) {
+                            state.blockedDates.push(dateStr);
+                        }
                         currentDate.setDate(currentDate.getDate() + 1);
                     }
                 }
             });
+            
+            console.log(`Total blocked dates: ${state.blockedDates.length}`);
+            console.log('Blocked dates:', state.blockedDates);
         }
         
         renderCalendar();
     } catch (error) {
         console.error('Error loading blocked dates:', error);
+        alert('Unable to load calendar availability. Please contact us directly at ' + CONFIG.email);
     }
-    */
 }
 
 // Event Listeners
@@ -407,19 +418,15 @@ Please respond to this request within 24 hours.
 
 // Reset Widget
 function resetWidget() {
-    state = {
-        currentMonth: new Date(),
-        checkInDate: null,
-        checkOutDate: null,
-        blockedDates: state.blockedDates, // Keep blocked dates
-        guestData: {
-            name: '',
-            email: '',
-            phone: '',
-            adults: 2,
-            children: 0,
-            requests: ''
-        }
+    state.checkInDate = null;
+    state.checkOutDate = null;
+    state.guestData = {
+        name: '',
+        email: '',
+        phone: '',
+        adults: 2,
+        children: 0,
+        requests: ''
     };
     
     // Reset form
@@ -430,15 +437,3 @@ function resetWidget() {
     goToStep('calendar');
     renderCalendar();
 }
-
-// Manual Blocked Dates Management
-// You can manually add blocked dates here until Google Calendar API is set up
-function addBlockedDates(dates) {
-    // dates should be an array of strings in 'YYYY-MM-DD' format
-    // Example: ['2025-12-25', '2025-12-26', '2025-12-31']
-    state.blockedDates = [...state.blockedDates, ...dates];
-    renderCalendar();
-}
-
-// Example: Add Christmas and New Year as blocked
-// addBlockedDates(['2025-12-24', '2025-12-25', '2025-12-26', '2025-12-31', '2026-01-01']);
