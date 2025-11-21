@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Villa Volpe Booking Calendar</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="booking-widget">
+        <!-- Step 1: Calendar Selection -->
+        <div id="step-calendar" class="step active">
+            <h2>Select Your Dates</h2>
+            <p class="subtitle">Minimum 3 nights stay required</p>
+            
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <button id="prev-month" class="nav-btn" aria-label="Previous month">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3 id="current-month"></h3>
+                    <button id="next-month" class="nav-btn" aria-label="Next month">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="calendar-grid" id="calendar-grid">
+                    <!-- Calendar days will be generated here -->
+                </div>
+                
+                <div class="selected-dates" id="selected-dates-display">
+                    <div class="date-box">
+                        <label>Check-in</label>
+                        <span id="checkin-display">Select date</span>
+                    </div>
+                    <div class="nights-display" id="nights-display" style="display: none;">
+                        <span id="nights-count">0</span> nights
+                    </div>
+                    <div class="date-box">
+                        <label>Check-out</label>
+                        <span id="checkout-display">Select date</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="continue-to-guests" class="btn-primary" disabled>Continue</button>
+        </div>
+
+        <!-- Step 2: Guest Information -->
+        <div id="step-guests" class="step">
+            <button class="back-btn" onclick="goToStep('calendar')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Back
+            </button>
+            
+            <h2>Guest Information</h2>
+            
+            <form id="guest-form">
+                <div class="form-group">
+                    <label for="guest-name">Full Name *</label>
+                    <input type="text" id="guest-name" required placeholder="John Doe">
+                </div>
+                
+                <div class="form-group">
+                    <label for="guest-email">Email Address *</label>
+                    <input type="email" id="guest-email" required placeholder="john@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="guest-phone">Phone Number *</label>
+                    <input type="tel" id="guest-phone" required placeholder="+39 123 456 7890">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="num-adults">Adults (13+) *</label>
+                        <select id="num-adults" required>
+                            <option value="">Select</option>
+                            <option value="1">1</option>
+                            <option value="2" selected>2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="num-children">Children (0-12)</label>
+                        <select id="num-children">
+                            <option value="0" selected>0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="special-requests">Special Requests (Optional)</label>
+                    <textarea id="special-requests" rows="3" placeholder="Any special requirements or questions?"></textarea>
+                </div>
+                
+                <div id="guest-limit-warning" class="warning-message" style="display: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    Maximum 4 guests allowed (adults + children)
+                </div>
+                
+                <button type="button" id="continue-to-policy" class="btn-primary">Continue</button>
+            </form>
+        </div>
+
+        <!-- Step 3: Policy Acceptance -->
+        <div id="step-policy" class="step">
+            <button class="back-btn" onclick="goToStep('guests')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Back
+            </button>
+            
+            <h2>Booking Summary & Policies</h2>
+            
+            <div class="summary-card">
+                <h3>Your Reservation</h3>
+                <div class="summary-row">
+                    <span>Check-in:</span>
+                    <strong id="summary-checkin"></strong>
+                </div>
+                <div class="summary-row">
+                    <span>Check-out:</span>
+                    <strong id="summary-checkout"></strong>
+                </div>
+                <div class="summary-row">
+                    <span>Duration:</span>
+                    <strong id="summary-nights"></strong>
+                </div>
+                <div class="summary-row">
+                    <span>Guests:</span>
+                    <strong id="summary-guests"></strong>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h3>Booking Policy</h3>
+                <ul>
+                    <li>A <strong>30% deposit</strong> of the total price is required to confirm your reservation.</li>
+                    <li>The <strong>final balance</strong> must be settled within <strong>21 days</strong> of the check-in date.</li>
+                    <li>Each guest must provide a <strong>valid identification document</strong> for registration with local authorities.</li>
+                    <li>A <strong>municipal tourist tax of €1.00 per night per guest</strong> applies.</li>
+                </ul>
+                
+                <h3>Cancellation Policy</h3>
+                <ul>
+                    <li>You may cancel up to <strong>21 days before check-in</strong> and receive a <strong>full refund</strong> of the deposit.</li>
+                    <li>Cancellations after this deadline will result in <strong>no refund</strong> of the deposit.</li>
+                </ul>
+                
+                <h3>Additional Policies</h3>
+                <ul>
+                    <li><strong>No parties or events</strong> are permitted at Villa Volpe.</li>
+                    <li><strong>Small pets are allowed</strong>; other dogs may be present on the property.</li>
+                    <li>A <strong>cleaning fee of €120.00 per stay</strong> applies.</li>
+                </ul>
+            </div>
+            
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="accept-policy" required>
+                    <span>I have read and accept the booking, cancellation, and additional policies</span>
+                </label>
+            </div>
+            
+            <button id="send-request" class="btn-primary" disabled>Send Booking Request</button>
+        </div>
+
+        <!-- Step 4: Confirmation -->
+        <div id="step-confirmation" class="step">
+            <div class="confirmation-content">
+                <div class="success-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <h2>Request Sent!</h2>
+                <p>Thank you for your booking request. We'll review your information and get back to you within 24 hours at <strong id="confirmation-email"></strong>.</p>
+                <p class="confirmation-note">Please check your spam folder if you don't receive our response.</p>
+                <button onclick="resetWidget()" class="btn-secondary">Make Another Booking</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="calendar.js"></script>
+</body>
+</html>
