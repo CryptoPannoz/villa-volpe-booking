@@ -6,10 +6,10 @@
 }
 
 :root {
-    /* Lake Orta Blue Theme */
-    --primary-color: #0B5394;
-    --primary-hover: #084070;
-    --accent-color: #3FA9B8;
+    /* Villa Volpe Orange Theme */
+    --primary-color: #ffa03f;     /* COLORE PRINCIPALE AGGIORNATO */
+    --primary-hover: #e68a2e;     /* Arancione più scuro per hover */
+    --accent-color: #3FA9B8;      /* Mantenuto il turchese per contrasto, o puoi usare un grigio scuro */
     --success-color: #2E7D32;
     --warning-color: #F57C00;
     --error-color: #C62828;
@@ -20,7 +20,7 @@
     
     --bg-white: #FFFFFF;
     --bg-light: #F5F7FA;
-    --bg-hover: #E8F4F8;
+    --bg-hover: #fff5eb;          /* Sfondo hover aggiornato (arancio pallido) */
     --border-color: #E0E0E0;
     
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -114,7 +114,7 @@ h3 {
 
 .btn-primary {
     background-color: var(--primary-color);
-    color: white;
+    color: white; /* Nota: Se l'arancione è troppo chiaro, considera cambiare questo in #1A1A1A */
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -325,7 +325,8 @@ h3 {
 .form-group textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(11, 83, 148, 0.1);
+    /* Aggiornato l'RGBA per corrispondere all'arancione (255, 160, 63) */
+    box-shadow: 0 0 0 3px rgba(255, 160, 63, 0.2);
 }
 
 .form-row {
