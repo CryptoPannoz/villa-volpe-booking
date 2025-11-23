@@ -407,7 +407,7 @@ async function sendBookingRequest() {
     const totalGuests = state.guestData.adults + state.guestData.children;
     
     // Show loading state
-    const sendButton = document.getElementById('send-booking');
+    const sendButton = document.getElementById('send-request');
     const originalText = sendButton.textContent;
     sendButton.textContent = 'Sending...';
     sendButton.disabled = true;
