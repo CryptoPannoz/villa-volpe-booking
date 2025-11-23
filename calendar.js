@@ -266,7 +266,7 @@ async function loadBlockedDates() {
                     
                     // Add all dates in the event range
                     let currentDate = new Date(startDate);
-                    while (currentDate <= endDate) {
+                    while (currentDate < endDate) {
                         const dateStr = currentDate.toISOString().split('T')[0];
                         if (!state.blockedDates.includes(dateStr)) {
                             state.blockedDates.push(dateStr);
