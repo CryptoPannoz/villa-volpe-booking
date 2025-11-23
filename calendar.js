@@ -169,13 +169,13 @@ function updateDateDisplay() {
     const continueBtn = document.getElementById('continue-to-guests');
     
     if (state.checkInDate) {
-        checkInDisplay.textContent = formatDate(state.checkInDate);
+        checkInDisplay.textContent = formatDateDisplay(state.checkInDate);
     } else {
         checkInDisplay.textContent = 'Select date';
     }
     
     if (state.checkOutDate) {
-        checkOutDisplay.textContent = formatDate(state.checkOutDate);
+        checkOutDisplay.textContent = formatDateDisplay(state.checkOutDate);
         const nights = calculateNights(state.checkInDate, state.checkOutDate);
         nightsCount.textContent = nights;
         nightsDisplay.style.display = 'block';
@@ -188,12 +188,21 @@ function updateDateDisplay() {
 }
 
 // Date Utilities
-function formatDate(date) {
+// Format date for display (Nov 23, 2025)
+function formatDateDisplay(date) {
     return date.toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric',
         year: 'numeric'
     });
+}
+
+// Format date for Google Sheet (DD/MM/YYYY)
+function formatDateForSheet(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
 }
 
 function calculateNights(checkIn, checkOut) {
@@ -383,8 +392,8 @@ function goToStep(stepName) {
 
 // Update Summary
 function updateSummary() {
-    document.getElementById('summary-checkin').textContent = formatDate(state.checkInDate);
-    document.getElementById('summary-checkout').textContent = formatDate(state.checkOutDate);
+    document.getElementById('summary-checkin').textContent = formatDateDisplay(state.checkInDate);
+    document.getElementById('summary-checkout').textContent = formatDateDisplay(state.checkOutDate);
     
     const nights = calculateNights(state.checkInDate, state.checkOutDate);
     document.getElementById('summary-nights').textContent = `${nights} night${nights > 1 ? 's' : ''}`;
@@ -402,7 +411,7 @@ function updateSummary() {
 }
 
 // Send Booking Request
-async function sendBookingRequest() {
+function sendBookingRequest() {
     const nights = calculateNights(state.checkInDate, state.checkOutDate);
     const totalGuests = state.guestData.adults + state.guestData.children;
     
@@ -412,41 +421,59 @@ async function sendBookingRequest() {
     sendButton.textContent = 'Sending...';
     sendButton.disabled = true;
     
-    try {
-        // Prepare data for Google Apps Script
-        const bookingData = {
-            guestName: state.guestData.name,
-            guestEmail: state.guestData.email,
-            guestPhone: state.guestData.phone,
-            checkIn: formatDate(state.checkInDate),
-            checkOut: formatDate(state.checkOutDate),
-            nights: nights,
-            adults: state.guestData.adults,
-            children: state.guestData.children,
-            totalGuests: totalGuests,
-            pets: state.guestData.pets,
-            specialRequests: state.guestData.requests || ''
-        };
-        
-        // Send to Google Apps Script Web App
-        const response = await fetch(CONFIG.webAppUrl, {
-            method: 'POST',
-            mode: 'no-cors', // Important for Google Apps Script
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(bookingData)
-        });
-        
-        // Note: no-cors mode doesn't allow reading response, but request will succeed
-        console.log('Booking request sent successfully');
-        
-        // Show confirmation
+    // Prepare data for Google Apps Script
+    const bookingData = {
+        guestName: state.guestData.name,
+        guestEmail: state.guestData.email,
+        guestPhone: state.guestData.phone,
+        checkIn: formatDateForSheet(state.checkInDate),
+        checkOut: formatDateForSheet(state.checkOutDate),
+        nights: nights,
+        adults: state.guestData.adults,
+        children: state.guestData.children,
+        totalGuests: totalGuests,
+        pets: state.guestData.pets,
+        specialRequests: state.guestData.requests || ''
+    };
+    
+    console.log('Sending booking request:', bookingData);
+    
+    // Use XMLHttpRequest for better mobile compatibility
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', CONFIG.webAppUrl, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    
+    // Set timeout (10 seconds)
+    xhr.timeout = 10000;
+    
+    xhr.onload = function() {
+        console.log('Request completed with status:', xhr.status);
+        // Show confirmation (Google Apps Script returns 302 redirect on success)
         document.getElementById('confirmation-email').textContent = state.guestData.email;
         goToStep('confirmation');
-        
+    };
+    
+    xhr.onerror = function() {
+        console.error('Network error occurred');
+        // Even on "error", the request might have succeeded (CORS limitation)
+        // Show confirmation anyway after a delay
+        setTimeout(function() {
+            document.getElementById('confirmation-email').textContent = state.guestData.email;
+            goToStep('confirmation');
+        }, 1000);
+    };
+    
+    xhr.ontimeout = function() {
+        console.error('Request timeout');
+        alert('The request is taking longer than expected. Please check your email for confirmation or contact us at villavolpeorta@gmail.com');
+        sendButton.textContent = originalText;
+        sendButton.disabled = false;
+    };
+    
+    try {
+        xhr.send(JSON.stringify(bookingData));
     } catch (error) {
-        console.error('Error sending booking request:', error);
+        console.error('Error sending request:', error);
         alert('There was an error sending your request. Please try again or contact us directly at villavolpeorta@gmail.com');
         sendButton.textContent = originalText;
         sendButton.disabled = false;
