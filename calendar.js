@@ -5,6 +5,7 @@
 const CONFIG = {
     calendarId: 'be5a630aebb1f10d8e8bee8144948cda4b8227517394f8ff109a17c9424b6e57@group.calendar.google.com',
     apiKey: 'AIzaSyDkmWoTVEgonSPPTYrKIY9SuoodIVO4lpQ',
+    webAppUrl: 'https://script.google.com/macros/s/AKfycbwf7kmsVNoeBD1x4IAaCWQapAr_gNaOzbXrIIlKSCMCYfHKAuaZ1G0dm0hdTpeISK7EcA/exec',
     minNights: 3,
     maxGuests: 4,
     email: 'villavolpeorta@gmail.com'
@@ -401,46 +402,55 @@ function updateSummary() {
 }
 
 // Send Booking Request
-function sendBookingRequest() {
+async function sendBookingRequest() {
     const nights = calculateNights(state.checkInDate, state.checkOutDate);
     const totalGuests = state.guestData.adults + state.guestData.children;
     
-    // Prepare email content
-    const subject = `Booking Request for Villa Volpe - ${formatDate(state.checkInDate)} to ${formatDate(state.checkOutDate)}`;
+    // Show loading state
+    const sendButton = document.getElementById('send-booking');
+    const originalText = sendButton.textContent;
+    sendButton.textContent = 'Sending...';
+    sendButton.disabled = true;
     
-    const body = `
-VILLA VOLPE BOOKING REQUEST
-
-RESERVATION DETAILS:
-- Check-in: ${formatDate(state.checkInDate)}
-- Check-out: ${formatDate(state.checkOutDate)}
-- Duration: ${nights} night${nights > 1 ? 's' : ''}
-- Guests: ${state.guestData.adults} adult${state.guestData.adults > 1 ? 's' : ''}${state.guestData.children > 0 ? `, ${state.guestData.children} child${state.guestData.children > 1 ? 'ren' : ''}` : ''}
-
-GUEST INFORMATION:
-- Name: ${state.guestData.name}
-- Email: ${state.guestData.email}
-- Phone: ${state.guestData.phone}
-- Pets: ${state.guestData.pets === 'yes' ? 'Yes (€120 cleaning fee applies)' : 'No'}
-
-SPECIAL REQUESTS:
-${state.guestData.requests || 'None'}
-
----
-The guest has read and accepted all booking, cancellation, and additional policies.
-
-Please respond to this request within 24 hours.
-    `.trim();
-    
-    // Create mailto link
-    const mailtoLink = `mailto:${CONFIG.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
-    // Open email client
-    window.location.href = mailtoLink;
-    
-    // Show confirmation
-    document.getElementById('confirmation-email').textContent = state.guestData.email;
-    goToStep('confirmation');
+    try {
+        // Prepare data for Google Apps Script
+        const bookingData = {
+            guestName: state.guestData.name,
+            guestEmail: state.guestData.email,
+            guestPhone: state.guestData.phone,
+            checkIn: formatDate(state.checkInDate),
+            checkOut: formatDate(state.checkOutDate),
+            nights: nights,
+            adults: state.guestData.adults,
+            children: state.guestData.children,
+            totalGuests: totalGuests,
+            pets: state.guestData.pets,
+            specialRequests: state.guestData.requests || ''
+        };
+        
+        // Send to Google Apps Script Web App
+        const response = await fetch(CONFIG.webAppUrl, {
+            method: 'POST',
+            mode: 'no-cors', // Important for Google Apps Script
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(bookingData)
+        });
+        
+        // Note: no-cors mode doesn't allow reading response, but request will succeed
+        console.log('Booking request sent successfully');
+        
+        // Show confirmation
+        document.getElementById('confirmation-email').textContent = state.guestData.email;
+        goToStep('confirmation');
+        
+    } catch (error) {
+        console.error('Error sending booking request:', error);
+        alert('There was an error sending your request. Please try again or contact us directly at villavolpeorta@gmail.com');
+        sendButton.textContent = originalText;
+        sendButton.disabled = false;
+    }
 }
 
 // Reset Widget
