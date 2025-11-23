@@ -1,12 +1,12 @@
 // Villa Volpe Booking Calendar JavaScript
 // FIXED: Checkout day is now available for booking (checkout happens in the morning)
-// FIXED: CORS Issue resolved using fetch/text-plain
+// FIXED: CORS Issue resolved using fetch/text-plain instead of XMLHttpRequest
 
 // Configuration
 const CONFIG = {
     calendarId: 'be5a630aebb1f10d8e8bee8144948cda4b8227517394f8ff109a17c9424b6e57@group.calendar.google.com',
     apiKey: 'AIzaSyDkmWoTVEgonSPPTYrKIY9SuoodIVO4lpQ',
-    // NUOVO URL AGGIORNATO
+    // URL AGGIORNATO
     webAppUrl: 'https://script.google.com/macros/s/AKfycbyR_KhUaMlt0TrvT3mqjn28L_cI9LfcKVQ6pwLTSXioBZn4NCXk6mk1Wv_Xh7gi69ugyg/exec',
     minNights: 3,
     maxGuests: 4,
@@ -412,9 +412,9 @@ function updateSummary() {
     document.getElementById('summary-pets').textContent = petsText;
 }
 
-// =========================================================
-// FUNZIONE MODIFICATA PER CORS (USA FETCH + TEXT/PLAIN)
-// =========================================================
+// =========================================================================
+// FUNZIONE CRUCIALE: FIX CORS UTILIZZANDO FETCH E TEXT/PLAIN
+// =========================================================================
 function sendBookingRequest() {
     const nights = calculateNights(state.checkInDate, state.checkOutDate);
     const totalGuests = state.guestData.adults + state.guestData.children;
@@ -442,18 +442,22 @@ function sendBookingRequest() {
     
     console.log('Sending booking request:', bookingData);
     
-    // CORS FIX: Usiamo fetch con text/plain invece di XMLHttpRequest
+    // SOLUZIONE CORS: 
+    // 1. Usare fetch invece di XMLHttpRequest
+    // 2. mode: 'no-cors' (ignora la risposta opaca di Google)
+    // 3. Content-Type: text/plain (evita il preflight OPTIONS)
     fetch(CONFIG.webAppUrl, {
         method: 'POST',
-        mode: 'no-cors', // Importante per Google Apps Script
+        mode: 'no-cors', 
         headers: {
-            'Content-Type': 'text/plain;charset=utf-8', // Evita il controllo preflight OPTIONS
+            'Content-Type': 'text/plain;charset=utf-8',
         },
         body: JSON.stringify(bookingData)
     })
     .then(response => {
-        // Con mode 'no-cors', la risposta è opaca, assumiamo successo se non va in catch
-        console.log('Request sent successfully');
+        // Con 'no-cors', non possiamo leggere la risposta JSON.
+        // Se non entriamo nel blocco catch, assumiamo che l'invio sia riuscito.
+        console.log('Request sent successfully (opaque response)');
         document.getElementById('confirmation-email').textContent = state.guestData.email;
         goToStep('confirmation');
     })
