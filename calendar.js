@@ -1,4 +1,5 @@
 // Villa Volpe Booking Calendar JavaScript
+// FIXED: Checkout day is now available for booking (checkout happens in the morning)
 
 // Configuration
 const CONFIG = {
@@ -21,6 +22,7 @@ let state = {
         phone: '',
         adults: 2,
         children: 0,
+        pets: 'no',
         requests: ''
     }
 };
@@ -264,9 +266,10 @@ async function loadBlockedDates() {
                     startDate.setHours(0, 0, 0, 0);
                     endDate.setHours(0, 0, 0, 0);
                     
-                    // Add all dates in the event range
+                    // FIXED: Block dates from check-in to day BEFORE checkout
+                    // Because checkout happens in the morning, the checkout night is available
                     let currentDate = new Date(startDate);
-                    while (currentDate < endDate) {
+                    while (currentDate < endDate) {  // Changed from <= to < (this is the fix!)
                         const dateStr = currentDate.toISOString().split('T')[0];
                         if (!state.blockedDates.includes(dateStr)) {
                             state.blockedDates.push(dateStr);
@@ -274,6 +277,8 @@ async function loadBlockedDates() {
                         }
                         currentDate.setDate(currentDate.getDate() + 1);
                     }
+                    
+                    console.log(`  Checkout day ${endDate.toISOString().split('T')[0]} is AVAILABLE (checkout in morning)`);
                 }
             });
             
@@ -347,6 +352,7 @@ function setupEventListeners() {
             phone: document.getElementById('guest-phone').value,
             adults: parseInt(document.getElementById('num-adults').value),
             children: parseInt(document.getElementById('num-children').value),
+            pets: document.getElementById('pets').value,
             requests: document.getElementById('special-requests').value
         };
         
@@ -388,6 +394,10 @@ function updateSummary() {
         guestText += `, ${state.guestData.children} child${state.guestData.children > 1 ? 'ren' : ''}`;
     }
     document.getElementById('summary-guests').textContent = guestText;
+    
+    // Display pets
+    const petsText = state.guestData.pets === 'yes' ? 'Yes (€120 cleaning fee applies)' : 'No';
+    document.getElementById('summary-pets').textContent = petsText;
 }
 
 // Send Booking Request
@@ -411,6 +421,7 @@ GUEST INFORMATION:
 - Name: ${state.guestData.name}
 - Email: ${state.guestData.email}
 - Phone: ${state.guestData.phone}
+- Pets: ${state.guestData.pets === 'yes' ? 'Yes (€120 cleaning fee applies)' : 'No'}
 
 SPECIAL REQUESTS:
 ${state.guestData.requests || 'None'}
@@ -442,6 +453,7 @@ function resetWidget() {
         phone: '',
         adults: 2,
         children: 0,
+        pets: 'no',
         requests: ''
     };
     
