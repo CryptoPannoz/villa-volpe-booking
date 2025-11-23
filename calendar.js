@@ -1,10 +1,12 @@
 // Villa Volpe Booking Calendar JavaScript
 // FIXED: Checkout day is now available for booking (checkout happens in the morning)
+// FIXED: CORS Issue resolved using fetch/text-plain
 
 // Configuration
 const CONFIG = {
     calendarId: 'be5a630aebb1f10d8e8bee8144948cda4b8227517394f8ff109a17c9424b6e57@group.calendar.google.com',
     apiKey: 'AIzaSyDkmWoTVEgonSPPTYrKIY9SuoodIVO4lpQ',
+    // NUOVO URL AGGIORNATO
     webAppUrl: 'https://script.google.com/macros/s/AKfycbyR_KhUaMlt0TrvT3mqjn28L_cI9LfcKVQ6pwLTSXioBZn4NCXk6mk1Wv_Xh7gi69ugyg/exec',
     minNights: 3,
     maxGuests: 4,
@@ -410,7 +412,9 @@ function updateSummary() {
     document.getElementById('summary-pets').textContent = petsText;
 }
 
-// Send Booking Request
+// =========================================================
+// FUNZIONE MODIFICATA PER CORS (USA FETCH + TEXT/PLAIN)
+// =========================================================
 function sendBookingRequest() {
     const nights = calculateNights(state.checkInDate, state.checkOutDate);
     const totalGuests = state.guestData.adults + state.guestData.children;
@@ -438,46 +442,27 @@ function sendBookingRequest() {
     
     console.log('Sending booking request:', bookingData);
     
-    // Use XMLHttpRequest for better mobile compatibility
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', CONFIG.webAppUrl, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    
-    // Set timeout (10 seconds)
-    xhr.timeout = 10000;
-    
-    xhr.onload = function() {
-        console.log('Request completed with status:', xhr.status);
-        // Show confirmation (Google Apps Script returns 302 redirect on success)
+    // CORS FIX: Usiamo fetch con text/plain invece di XMLHttpRequest
+    fetch(CONFIG.webAppUrl, {
+        method: 'POST',
+        mode: 'no-cors', // Importante per Google Apps Script
+        headers: {
+            'Content-Type': 'text/plain;charset=utf-8', // Evita il controllo preflight OPTIONS
+        },
+        body: JSON.stringify(bookingData)
+    })
+    .then(response => {
+        // Con mode 'no-cors', la risposta è opaca, assumiamo successo se non va in catch
+        console.log('Request sent successfully');
         document.getElementById('confirmation-email').textContent = state.guestData.email;
         goToStep('confirmation');
-    };
-    
-    xhr.onerror = function() {
-        console.error('Network error occurred');
-        // Even on "error", the request might have succeeded (CORS limitation)
-        // Show confirmation anyway after a delay
-        setTimeout(function() {
-            document.getElementById('confirmation-email').textContent = state.guestData.email;
-            goToStep('confirmation');
-        }, 1000);
-    };
-    
-    xhr.ontimeout = function() {
-        console.error('Request timeout');
-        alert('The request is taking longer than expected. Please check your email for confirmation or contact us at villavolpeorta@gmail.com');
-        sendButton.textContent = originalText;
-        sendButton.disabled = false;
-    };
-    
-    try {
-        xhr.send(JSON.stringify(bookingData));
-    } catch (error) {
+    })
+    .catch(error => {
         console.error('Error sending request:', error);
-        alert('There was an error sending your request. Please try again or contact us directly at villavolpeorta@gmail.com');
+        alert('There was an error sending your request. Please try again or contact us directly at ' + CONFIG.email);
         sendButton.textContent = originalText;
         sendButton.disabled = false;
-    }
+    });
 }
 
 // Reset Widget
