@@ -5,7 +5,7 @@
 const CONFIG = {
     calendarId: 'be5a630aebb1f10d8e8bee8144948cda4b8227517394f8ff109a17c9424b6e57@group.calendar.google.com',
     apiKey: 'AIzaSyDkmWoTVEgonSPPTYrKIY9SuoodIVO4lpQ',
-    webAppUrl: 'https://script.google.com/macros/s/AKfycbwII03OOwsmyu1zXFojiQciLGnU-3nFgpB2XDwMEEIP4lDv1HvvTFDMBrgxmCTjt2TBPA/exec',
+    webAppUrl: 'https://script.google.com/macros/s/AKfycbyR_KhUaMlt0TrvT3mqjn28L_cI9LfcKVQ6pwLTSXioBZn4NCXk6mk1Wv_Xh7gi69ugyg/exec',
     minNights: 3,
     maxGuests: 4,
     email: 'villavolpeorta@gmail.com'
